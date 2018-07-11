@@ -99,39 +99,45 @@ def get_data(path_em='../Data/balanced/cleaned_emergency/', path_nonem='../Data/
 	em_files = glob.glob(os.path.join(path_em, '*.wav'))
 	nonem_files = glob.glob(os.path.join(path_nonem, '*.wav'))
 
-	print("Reading the Em class training files")
+	print("Reading the Em class files")
 	X_em = read_files(em_files)
 
 	N_em = len(em_files) # Remove data imbalance
-	print("Reading the Non-Em class training files")
+	print("Reading the Non-Em class files")
 	X_nonem = read_files(nonem_files[:N_em])
 	
 	return X_em, X_nonem
 
 
-def prepare_data(X_em, X_nonem, scaler, sc=False):
+def prepare_data_train(X_em, X_nonem):
     X_em = np.array(X_em)
     X_nonem = np.array(X_nonem)
 
     X = np.vstack((X_em, X_nonem))
     Y = np.hstack((np.ones(len(X_em)), np.zeros(len(X_nonem))))
 
-    if not sc:
-        scaler = StandardScaler()
-        scaler.fit_transform(X)
-        
-        X, Y = shuffle(X, Y, random_state=7)
-        
-        return X, Y, scaler
+    scaler = StandardScaler()
+    scaler.fit_transform(X)
+    
+    X, Y = shuffle(X, Y, random_state=7)
+    
+    return X, Y, scaler
 
-    else:
-    	# # Correct the expression below
-    	# X = (X - scaler.mean_)/scaler.std_
-        scaler.fit_transform(X)
 
-        X, Y = shuffle(X, Y, random_state=7)
+def prepare_data_test(X_em, X_nonem, scaler):
+    X_em = np.array(X_em)
+    X_nonem = np.array(X_nonem)
 
-        return X, Y
+    X = np.vstack((X_em, X_nonem))
+    Y = np.hstack((np.ones(len(X_em)), np.zeros(len(X_nonem))))
+
+    # # Correct the expression below
+    # X = (X - scaler.mean_)/scaler.std_
+    scaler.fit_transform(X)
+
+    X, Y = shuffle(X, Y, random_state=7)
+
+    return X, Y
 
 
 def build_model():
@@ -157,7 +163,7 @@ def run_model(model, X_train, Y_train, X_test, Y_test):
 	return history
 
 
-def plot_model_history(history):
+def plot_model_history(model_history):
     fig, axs = plt.subplots(1,2,figsize=(15,5))
 
     # summarize history for accuracy
@@ -279,22 +285,28 @@ def predict_output(y, scaler):
 
 
 def main():
+
+    ## TO DO:
+    # Save extracted train and test data into npz or hdfs format
+
     # train data
     train_path_em = '../Data/balanced/cleaned_emergency/'
     train_path_nonem = '../Data/balanced/nonEmergency/'
 
+    print("Training data")
     Em_data, Nonem_data = get_data(train_path_em, train_path_nonem)
 
-    X_train, Y_train, scaler = prepare_data(Em_data, Nonem_data)
+    X_train, Y_train, scaler = prepare_data_train(Em_data, Nonem_data)
 
     # test data
     test_path_em = '../Data/new_eval/cleaned_emergency/'
     test_path_nonem = '../Data/eval/nonEmergency/'
 
+    rint("Test data")
     Em_data, Nonem_data = get_data(test_path_em, test_path_nonem)
 
     # Check how to call the function correctly
-    X_test, Y_test = prepare_data(Em_data, Nonem_data, scaler, sc=True)
+    X_test, Y_test = prepare_data_test(Em_data, Nonem_data, scaler)
 
     # Build the model
     model = build_model()
@@ -316,14 +328,14 @@ def main():
 
     for test_file in tqdm(test_em_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_op(y, scaler)
+        classes = predict_output(y, scaler)
         if classes == 1:
             correct_em += 1
         tot_em += 1
 
     for test_file in tqdm(test_nonem_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_op(y, scaler)
+        classes = predict_output(y, scaler)
         if classes == 0:
             correct_nonem += 1
         tot_nonem += 1
