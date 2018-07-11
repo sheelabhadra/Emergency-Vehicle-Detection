@@ -44,10 +44,32 @@ np.random.seed(7)
 
 
 def mfcc(y, sr=8000, n_mfcc=12):
+    '''
+    Finds the MFCC coefficients given sampled audio data
+
+    Arguments:
+    y - sampled audio signal
+    sr - sampling rate (Hz)
+    n_mfcc - Number of MFCC coefficients
+
+    Returns:
+    list of MFCC coefficients
+
+    '''
     return librosa.feature.mfcc(y=y,sr=sr, n_mfcc=n_mfcc)
 
 
 def extract_mfccs(y):
+    '''
+    Extract MFCC coefficients from short duration audio clips
+
+    Arguments:
+    y - sampled audio signal
+
+    Returns:
+    list of MFCC coefficients for each sub-sample
+
+    '''
     mfccs_list = []
     ran = len(y)//160
     for i in range(ran-10):
@@ -61,7 +83,7 @@ def extract_mfccs(y):
 
 def read_files(path):
 	X = []
-	for fn in tqdm(em_files):
+	for fn in tqdm(path):
 	    y, sr = librosa.load(fn, sr=8000)
 	    features = extract_mfccs(y)
 	    X.extend(features)
@@ -69,7 +91,7 @@ def read_files(path):
 
 # Read all the files from the dataset folder
 
-def get_data(path_em='../data/balanced/cleaned_emergency/', path_nonem='../data/balanced/nonEmergency/'):
+def get_data(path_em='../Data/balanced/cleaned_emergency/', path_nonem='../Data/balanced/nonEmergency/'):
 	# # Make the data file path user defined
 	# path_em = '../data/balanced/cleaned_emergency/'
 	# path_nonem = '../data/balanced/nonEmergency/'
@@ -87,45 +109,30 @@ def get_data(path_em='../data/balanced/cleaned_emergency/', path_nonem='../data/
 	return X_em, X_nonem
 
 
-def prepare_data(X_em, X_nonem, sc=False, scaler):
-	X_em = np.array(X_em)
+def prepare_data(X_em, X_nonem, scaler, sc=False):
+    X_em = np.array(X_em)
     X_nonem = np.array(X_nonem)
-    
+
     X = np.vstack((X_em, X_nonem))
     Y = np.hstack((np.ones(len(X_em)), np.zeros(len(X_nonem))))
 
     if not sc:
-	    scaler = StandardScaler()
-	    scaler.fit_transform(X)
-	    
-	    X, Y = shuffle(X, Y, random_state=7)
-	    
-	    return X, Y, scaler
+        scaler = StandardScaler()
+        scaler.fit_transform(X)
+        
+        X, Y = shuffle(X, Y, random_state=7)
+        
+        return X, Y, scaler
 
-	else:
-		# Correct the expression below
-		X = (X - scaler.mean_)/scaler.std_
+    else:
+    	# # Correct the expression below
+    	# X = (X - scaler.mean_)/scaler.std_
+        scaler.fit_transform(X)
 
-		X, Y = shuffle(X, Y, random_state=7)
-	    
-	    return X, Y
+        X, Y = shuffle(X, Y, random_state=7)
 
-# train data
-train_path_em = '../data/balanced/cleaned_emergency/'
-train_path_nonem = '../data/balanced/nonEmergency/'
+        return X, Y
 
-Em_data, Nonem_data = get_data(train_path_em. train_path_nonem)
-
-X_train, Y_train, scaler = prepare_data(Em_data, Nonem_data)
-
-# test data
-test_path_em = 'data/new_eval/cleaned_emergency/'
-test_path_nonem = 'data/eval/nonEmergency/'
-
-Em_data, Nonem_data = get_data(test_path_em, test_path_nonem)
-
-# Check how to call the function correctly
-X_test, Y_test = prepare_data(Em_data, Nonem_data, sc=True, scaler=scaler)
 
 def build_model():
 	model = Sequential([
@@ -151,8 +158,8 @@ def run_model(model, X_train, Y_train, X_test, Y_test):
 
 
 def plot_model_history(history):
-	fig, axs = plt.subplots(1,2,figsize=(15,5))
-    
+    fig, axs = plt.subplots(1,2,figsize=(15,5))
+
     # summarize history for accuracy
     axs[0].plot(range(1,len(model_history.history['acc'])+1),model_history.history['acc'])
     axs[0].plot(range(1,len(model_history.history['val_acc'])+1),model_history.history['val_acc'])
@@ -162,7 +169,7 @@ def plot_model_history(history):
     axs[0].set_xlabel('Epoch')
     axs[0].set_xticks(np.arange(1,len(model_history.history['acc'])+1),len(model_history.history['acc'])/10)
     axs[0].legend(['train', 'val'], loc='best');
-    
+
     # summarize history for loss
     axs[1].plot(range(1,len(model_history.history['loss'])+1),model_history.history['loss'])
     axs[1].plot(range(1,len(model_history.history['val_loss'])+1),model_history.history['val_loss'])
@@ -171,7 +178,7 @@ def plot_model_history(history):
     axs[1].set_xlabel('Epoch')
     axs[1].set_xticks(np.arange(1,len(model_history.history['loss'])+1),len(model_history.history['loss'])/10)
     axs[1].legend(['train', 'val'], loc='best');
-    
+
     plt.savefig('model_history.png')
 
 
@@ -185,14 +192,14 @@ def clip_level_prediction(model, X_test, Y_test):
 
 
 def predict_probability(y, scaler):
-	mfccs_list = extract_mfccs(y)
+    mfccs_list = extract_mfccs(y)
     scaler.transform(mfccs_list)
     count = 0
     N = 20 # Window size
-    th = 0.5 # Minimum value for Em presence
-    
+    th = 0.5 # Minimum probabilty value for Em presence
+
     model = load_model('model2.h5')
-    
+
     prob_list = []
     class_list = []
 
@@ -201,7 +208,7 @@ def predict_probability(y, scaler):
         p = p.flatten()
         prob_list.append(p)
     prob = np.mean(prob_list)
-    
+
 
     if prob > th:
         #print("Em")
@@ -209,7 +216,7 @@ def predict_probability(y, scaler):
     else:
         #print("Non-em")
         class_list.append(0)
-    
+
     for i in range(N,len(mfccs_list)):
         prob_list.pop(0)
         p = model.predict(mfccs_list[i].reshape(1,12), batch_size=None, verbose=0)
@@ -226,22 +233,6 @@ def predict_probability(y, scaler):
 
     return class_list
 
-classes = predict_probability(y, scaler2)
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.plot(classes, c='r', linewidth = 3.0, alpha=0.5)
-scale_x = len(classes)/10.0
-ticks_x = ticker.FuncFormatter(lambda x, pos: '%.2f'%(x/scale_x))
-ax.xaxis.set_major_formatter(ticks_x)
-ax.set_yticks([0,1])
-ax.set_ylim([-0.1, 1.1])
-ax.set_xlabel("time (s)")
-ax.set_ylabel("Em signal presence")
-plt.grid('on')
-plt.tight_layout()
-plt.show()
-
 
 # Test Accuracy
 def predict_output(y, scaler):
@@ -250,9 +241,9 @@ def predict_output(y, scaler):
     count = 0
     N = 20
     th = 0.5
-    
-    model = load_model('model.h5')
-    
+
+    model = load_model('model2.h5')
+
     prob_list = []
     class_list = []
     for i in range(N):
@@ -267,7 +258,7 @@ def predict_output(y, scaler):
     else:
         #print("Non-em")
         class_list.append(0)
-    
+
     for i in range(N,len(mfccs_list)):
         prob_list.pop(0)
         p = model.predict(mfccs_list[i].reshape(1,12), batch_size=None, verbose=0)
@@ -287,31 +278,62 @@ def predict_output(y, scaler):
         return 0
 
 
-test_path_em = 'data/new_eval/cleaned_emergency/'
-test_path_nonem = 'data/eval/nonEmergency/'
+def main():
+    # train data
+    train_path_em = '../Data/balanced/cleaned_emergency/'
+    train_path_nonem = '../Data/balanced/nonEmergency/'
 
-test_em_files = glob.glob(os.path.join(test_path_em, '*.wav'))
-test_nonem_files = glob.glob(os.path.join(test_path_nonem, '*.wav'))
+    Em_data, Nonem_data = get_data(train_path_em, train_path_nonem)
 
-tot_em, correct_em, tot_nonem, correct_nonem = 0, 0, 0, 0
+    X_train, Y_train, scaler = prepare_data(Em_data, Nonem_data)
 
-for test_file in tqdm(test_em_files):
-    y, sr = librosa.load(test_file, sr=8000)
-    classes = predict_op(y, scaler)
-    if classes == 1:
-        correct_em += 1
-    tot_em += 1
+    # test data
+    test_path_em = '../Data/new_eval/cleaned_emergency/'
+    test_path_nonem = '../Data/eval/nonEmergency/'
 
-for test_file in tqdm(test_nonem_files):
-    y, sr = librosa.load(test_file, sr=8000)
-    classes = predict_op(y, scaler)
-    if classes == 0:
-        correct_nonem += 1
-    tot_nonem += 1
+    Em_data, Nonem_data = get_data(test_path_em, test_path_nonem)
 
-print("Correct Em: {}\nTotal Em: {}\nCorrect Nonem: {}\nTotal Nonem: {}".format(correct_em, tot_em, correct_nonem, tot_nonem))
+    # Check how to call the function correctly
+    X_test, Y_test = prepare_data(Em_data, Nonem_data, scaler, sc=True)
 
-print("=== EVALUTION METRICS ===\n")
-print("Accuracy: {}".format(float(correct_em + correct_nonem)/(tot_em + tot_nonem)))
-print("Precision: {}".format(float(correct_em)/(tot_nonem - correct_nonem + correct_em)))
-print("Recall: {}".format(float(correct_em)/tot_em))
+    # Build the model
+    model = build_model()
+
+    # Run the training
+    history = run_model(model, X_train, Y_train, X_test, Y_test)
+
+    # Plot the loss and accuracy curves
+    plot_model_history(history)
+
+    # Get audio clip level evaluation results
+    clip_level_prediction(model, X_test, Y_test)
+    
+
+    test_em_files = glob.glob(os.path.join(test_path_em, '*.wav'))
+    test_nonem_files = glob.glob(os.path.join(test_path_nonem, '*.wav'))
+
+    tot_em, correct_em, tot_nonem, correct_nonem = 0, 0, 0, 0
+
+    for test_file in tqdm(test_em_files):
+        y, sr = librosa.load(test_file, sr=8000)
+        classes = predict_op(y, scaler)
+        if classes == 1:
+            correct_em += 1
+        tot_em += 1
+
+    for test_file in tqdm(test_nonem_files):
+        y, sr = librosa.load(test_file, sr=8000)
+        classes = predict_op(y, scaler)
+        if classes == 0:
+            correct_nonem += 1
+        tot_nonem += 1
+
+    print("Correct Em: {}\nTotal Em: {}\nCorrect Nonem: {}\nTotal Nonem: {}".format(correct_em, tot_em, correct_nonem, tot_nonem))
+
+    print("=== EVALUTION METRICS ===\n")
+    print("Accuracy: {}".format(float(correct_em + correct_nonem)/(tot_em + tot_nonem)))
+    print("Precision: {}".format(float(correct_em)/(tot_nonem - correct_nonem + correct_em)))
+    print("Recall: {}".format(float(correct_em)/tot_em))
+
+if __name__ == "__main__":
+    main()
