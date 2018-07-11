@@ -302,10 +302,9 @@ def main():
     test_path_em = '../Data/new_eval/cleaned_emergency/'
     test_path_nonem = '../Data/eval/nonEmergency/'
 
-    rint("Test data")
+    print("Test data")
     Em_data, Nonem_data = get_data(test_path_em, test_path_nonem)
 
-    # Check how to call the function correctly
     X_test, Y_test = prepare_data_test(Em_data, Nonem_data, scaler)
 
     # Build the model
@@ -320,7 +319,6 @@ def main():
     # Get audio clip level evaluation results
     clip_level_prediction(model, X_test, Y_test)
     
-
     test_em_files = glob.glob(os.path.join(test_path_em, '*.wav'))
     test_nonem_files = glob.glob(os.path.join(test_path_nonem, '*.wav'))
 
@@ -342,7 +340,7 @@ def main():
 
     print("Correct Em: {}\nTotal Em: {}\nCorrect Nonem: {}\nTotal Nonem: {}".format(correct_em, tot_em, correct_nonem, tot_nonem))
 
-    print("=== EVALUTION METRICS ===\n")
+    print("=== EVALUTION METRICS ===")
     print("Accuracy: {}".format(float(correct_em + correct_nonem)/(tot_em + tot_nonem)))
     print("Precision: {}".format(float(correct_em)/(tot_nonem - correct_nonem + correct_em)))
     print("Recall: {}".format(float(correct_em)/tot_em))
