@@ -8,13 +8,13 @@ import time
 # External modules
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 # Librosa for audio
 import librosa
 import librosa.display
-from tqdm import tqdm
-from sklearn.metrics import confusion_matrix
 
+# Plotting modules
 import matplotlib.pyplot as plt
 import matplotlib.style as ms
 import matplotlib.ticker as ticker
@@ -25,7 +25,9 @@ import matplotlib.gridspec as gridspec
 # Scikit-learn modules
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle 
+from sklearn.utils import shuffle
+from sklearn.externals import joblib
+from sklearn.metrics import confusion_matrix
 
 # Keras and TensorFlow modules
 from keras.models import Sequential
@@ -120,6 +122,12 @@ def prepare_data_train(X_em, X_nonem):
     scaler.fit_transform(X)
     
     X, Y = shuffle(X, Y, random_state=7)
+
+    # Save scaler for testing later
+    # Use sklearn's inbuilt saving tool
+    scaler_filename = "scaler.save"
+    joblib.dump(scaler, scaler_filename)
+    print("Saved scaler!")
     
     return X, Y, scaler
 
@@ -324,13 +332,15 @@ def main():
 
     tot_em, correct_em, tot_nonem, correct_nonem = 0, 0, 0, 0
 
+    print("Evaluating Em class test data")
     for test_file in tqdm(test_em_files):
         y, sr = librosa.load(test_file, sr=8000)
         classes = predict_output(y, scaler)
         if classes == 1:
             correct_em += 1
         tot_em += 1
-
+    
+    print("Evaluating NonEm class test data")
     for test_file in tqdm(test_nonem_files):
         y, sr = librosa.load(test_file, sr=8000)
         classes = predict_output(y, scaler)
@@ -338,7 +348,7 @@ def main():
             correct_nonem += 1
         tot_nonem += 1
 
-    print("Correct Em: {}\nTotal Em: {}\nCorrect Nonem: {}\nTotal Nonem: {}".format(correct_em, tot_em, correct_nonem, tot_nonem))
+    print("Correct Em: {}\nTotal Em: {}\nCorrect NonEm: {}\nTotal NonEm: {}".format(correct_em, tot_em, correct_nonem, tot_nonem))
 
     print("=== EVALUTION METRICS ===")
     print("Accuracy: {}".format(float(correct_em + correct_nonem)/(tot_em + tot_nonem)))
