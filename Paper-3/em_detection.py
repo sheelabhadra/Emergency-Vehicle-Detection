@@ -206,9 +206,11 @@ def clip_level_prediction(model, X_test, Y_test):
 	plt.savefig('Clip_confusion_matrix.jpg')
 
 
-def predict_probability(y, scaler):
-    mfccs_list = extract_mfccs(y)
-    scaler.transform(mfccs_list)
+def predict_probability(y, scaler, sr):
+    y = preprocess(y)
+    features_list = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.10*sr, .05*sr)
+    scaler.transform(features_list)
+
     count = 0
     N = 10 # Window size
     th = 0.5 # Minimum probabilty value for Em presence
@@ -219,11 +221,10 @@ def predict_probability(y, scaler):
     class_list = []
 
     for i in range(N):
-        p = model.predict(mfccs_list[i].reshape(1,12), batch_size=None, verbose=0)
+        p = model.predict(features_list[i].reshape(1,34), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
     prob = np.mean(prob_list)
-
 
     if prob > th:
         #print("Em")
@@ -232,9 +233,9 @@ def predict_probability(y, scaler):
         #print("Non-em")
         class_list.append(0)
 
-    for i in range(N,len(mfccs_list)):
+    for i in range(N,len(features_list)):
         prob_list.pop(0)
-        p = model.predict(mfccs_list[i].reshape(1,12), batch_size=None, verbose=0)
+        p = model.predict(features_list[i].reshape(1,34), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
         prob = np.mean(prob_list)
@@ -250,8 +251,8 @@ def predict_probability(y, scaler):
 
 
 # Test Accuracy
-def predict_output(y, scaler):
-    class_list = predict_probability(y, scaler)
+def predict_output(y, scaler, sr):
+    class_list = predict_probability(y, scaler, sr)
 
     if np.mean(class_list) > 0.5:
         return 1
@@ -261,7 +262,7 @@ def predict_output(y, scaler):
 
 def main():
 
-    ## TO DO:
+    # ## TO DO:
     # Save extracted train and test data into npz or hdfs format
 
     # train data
@@ -273,7 +274,7 @@ def main():
 
     X_train, Y_train, scaler = prepare_data_train(Em_data, Nonem_data)
 
-    # test data
+    # # test data
     test_path_em = '../Data/new_eval/cleaned_emergency/'
     test_path_nonem = '../Data/eval/nonEmergency/'
 
@@ -293,6 +294,9 @@ def main():
 
     # Get audio clip level evaluation results
     clip_level_prediction(model, X_test, Y_test)
+
+    # scaler_filename = "scaler.save"
+    # scaler = joblib.load(scaler_filename)
     
     test_em_files = glob.glob(os.path.join(test_path_em, '*.wav'))
     test_nonem_files = glob.glob(os.path.join(test_path_nonem, '*.wav'))
@@ -302,7 +306,7 @@ def main():
     print("Evaluating Em class test data")
     for test_file in tqdm(test_em_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_output(y, scaler)
+        classes = predict_output(y, scaler, sr=8000)
         if classes == 1:
             correct_em += 1
         tot_em += 1
@@ -310,7 +314,7 @@ def main():
     print("Evaluating NonEm class test data")
     for test_file in tqdm(test_nonem_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_output(y, scaler)
+        classes = predict_output(y, scaler, sr=8000)
         if classes == 0:
             correct_nonem += 1
         tot_nonem += 1
