@@ -7,4 +7,7 @@ This repository contains implementation of papers on sound-based Emergency Vehic
 ## Paper-2
 [An Automatic Emergency Signal Recognition System for the Hearing Impaired](https://ieeexplore.ieee.org/document/4041054/)
 
+## Paper-3
+[Detection of alarm sounds in noisy environments](https://ieeexplore.ieee.org/abstract/document/8081527/)
+
 
