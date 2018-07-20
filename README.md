@@ -20,17 +20,17 @@ One way to improve the results would be to look at features that are more repres
 
 Mel Frequency Cepstrum (MFC) is a representation of the short-term power spectrum of a sound. The Mel Frequency Cepstral Coefficients (MFCCs) are coefficients that collectively make up an MFC. The advantage of the cepstrum on a Mel scale is that the Mel scale resembles closely to the human auditory system’s response as compared to the normal cepstrum on a linear scale. This frequency warping allows better representation of sound. These features have been used extensively for audio processing and speech recognition tasks. In this paper 12 MFCC features were extracted from each 20 ms of the audio signal. The MFCCs were then fed to a machine learning classifier that tries to identify if the short audio clip contains an emergency signal or not. The classifier used in this paper is an Artificial Neural Network (ANN). The input layer of the network contains 12 nodes for the 12 MFCCs. The hidden layer contains 24 nodes. The output layer contains 1 node containing the probability of the presence of emergency signal in the audio sample.  
 
-![](Paper-2/NN2.jpeg "ANN-2 diagram")
-*ANN architecture*
+![](Paper-2/NN2.jpeg "ANN-2 diagram")*ANN architecture*
 
 In real-life classifying 20 ms short audio clips is not a great idea as the prediction may not be often steady due to the presence of noise in the audio samples. So, the predictions from 20 consecutive 20 ms audio clips were averaged. This introduced a delay of 400 ms but helped reduce the false alarms to a large extent.  
+
+The table below shows the Confusion Matrix for the samples in the test data: 
 
 |                       | Predicted                    | Predicted               |
 |                       | Emergency                    | Non-Emergency           |
 |:---------------------:|:----------------------------:|:-----------------------:|
 | Actual Emergency      | 107                          | 27                      |
 | Actual Non-Emergency  | 11                           | 94                      |
-*Confusion matrix*
 
 The results on this dataset are encouraging as I obtained about 84% accuracy on the evaluation dataset. More importantly the precision is close to 90% and the recall is close to 80%.  
 
@@ -51,15 +51,16 @@ The first step in this approach was to eliminate noise and spurious sounds. This
 
 In our implementation, we just used the raw features extracted from 100 ms short audio samples with a 50 ms overlap between adjacent samples. We haven’t computed the additional statistics and added them to the feature set. We used 34 features extracted from each audio sample. Also, from implementation of the previous paper we have a good idea that an ANN performs well as a classifier. So, we used an ANN in which the input layer contained 34 nodes which was the same as the number of features. The subsequent hidden layers consisted of 64, 128, and 256 units with ‘ReLU’ activation. The output layer consisted of 1 node with ‘Sigmoid’ activation. Also, to obtain a steady output, we averaged the prediction over the last 10 consecutive short audio samples. This introduced a processing time delay of 1 s for prediction.  
 
-![alt text](Paper-3/NN3.jpeg "ANN-3 diagram")
-*ANN architecture*
+![alt text](Paper-3/NN3.jpeg "ANN-3 diagram")*ANN architecture*
+
+The table below shows the Confusion Matrix for the samples in the test data: 
 
 |                       | Predicted                    | Predicted               |
 |                       | Emergency                    | Non-Emergency           |
 |:---------------------:|:----------------------------:|:-----------------------:|
 | Actual Emergency      | 108                          | 26                      |
 | Actual Non-Emergency  | 4                            | 101                     |
-*Confusion matrix*
+
 
 In most of the cases when the false negatives occur i.e. the signal is actually an emergency signal but is labeled incorrectly as a non-emergency signal by the classifier, there is a lot of noise present in the audio signals which overpowers the strength of the emergency signals.  
 
