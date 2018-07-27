@@ -1,6 +1,18 @@
 # Emergency-Vehicle-Detection
 This repository contains implementation of papers on sound-based Emergency Vehicle Detection in Python.  
 
+## Requirements and setup
+`Paper-1` and `Paper-2` have been implemented in Python-3 while `Paper-3` has been implemented in Python-2 in the [Anaconda](https://anaconda.org/anaconda/python) environment. The directories `Paper-2` and `Paper-3` contain the list of modules that need to be installed in the `requirements.txt` files. Please note that 2 separate environments need to be created for running the files in Paper-2 and Paper-3.  
+
+Once Anaconda is installed, to create an environment with the required modules simply run `conda create --name <env> --file requirements.txt` in the command window.  
+
+## Running the files
+Running `python em_detection.py` leads to training the model on the train data and displaying the performance metrics of the classifier on the test data.  
+
+`test_audio_file.py` reads an audio file and plots the probability of the presence of an emergency signal vs time in the audio clip. A sample output looks like as shown below.  
+
+![](Paper-3/Em_probability.png "Em presence")
+
 ## Paper-1
 [A real-time siren detector to improve safety of guide in traffic environment](https://ieeexplore.ieee.org/document/7080691/)
 
@@ -53,6 +65,7 @@ The first step in this approach was to eliminate noise and spurious sounds. This
 In our implementation, we just used the raw features extracted from 100 ms short audio samples with a 50 ms overlap between adjacent samples. We haven’t computed the additional statistics and added them to the feature set. We used 34 features extracted from each audio sample. Also, from implementation of the previous paper we have a good idea that an ANN performs well as a classifier. So, we used an ANN in which the input layer contained 34 nodes which was the same as the number of features. The subsequent hidden layers consisted of 64, 128, and 256 units with ‘ReLU’ activation. The output layer consisted of 1 node with ‘Sigmoid’ activation. Also, to obtain a steady output, we averaged the prediction over the last 10 consecutive short audio samples. This introduced a processing time delay of 1 s for prediction.  
 
 The diagram below shows the architecture of the ANN:
+
 ![](Paper-3/NN3.jpeg "ANN-3 diagram")
 
 The table below shows the Confusion Matrix for the samples in the test data: 
