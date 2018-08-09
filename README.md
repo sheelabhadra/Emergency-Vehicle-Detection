@@ -46,8 +46,8 @@ The table below shows the Confusion Matrix for the samples in the test data:
 
 |                       | Predicted Emergency          | Predicted Non-Emergency |
 |:---------------------:|:----------------------------:|:-----------------------:|
-| Actual Emergency      | 107                          | 27                      |
-| Actual Non-Emergency  | 11                           | 94                      |
+| Actual Emergency      | 102                          | 32                      |
+| Actual Non-Emergency  | 7                            | 98                      |
 
 The results on this dataset are encouraging as I obtained about 84% accuracy on the evaluation dataset. More importantly the precision is close to 90% and the recall is close to 80%.  
 
@@ -76,8 +76,8 @@ The table below shows the Confusion Matrix for the samples in the test data:
 
 |                       | Predicted Emergency          | Predicted Non-Emergency |
 |:---------------------:|:----------------------------:|:-----------------------:|
-| Actual Emergency      | 108                          | 26                      |
-| Actual Non-Emergency  | 4                            | 101                     |
+| Actual Emergency      | 116                          | 18                      |
+| Actual Non-Emergency  | 12                           | 93                      |
 
 
 In most of the cases when the false negatives occur i.e. the signal is actually an emergency signal but is labeled incorrectly as a non-emergency signal by the classifier, there is a lot of noise present in the audio signals which overpowers the strength of the emergency signals.  
