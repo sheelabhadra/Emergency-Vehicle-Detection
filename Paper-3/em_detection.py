@@ -148,8 +148,7 @@ def prepare_data_test(X_em, X_nonem, scaler):
 
 def build_model():
 	model = Sequential([
-		Dense(34, input_dim=34, activation='relu'),
-		Dense(64, activation='relu'),
+		Dense(64, input_dim=34, activation='relu'),
 		Dense(128, activation='relu'),
 		Dense(256, activation='relu'),
 		Dense(1, activation='sigmoid')
@@ -266,10 +265,10 @@ def main():
     # Save extracted train and test data into npz or hdfs format
 
     # train data
-    # train_path_em = '../Data/balanced/cleaned_emergency/'
-    # train_path_nonem = '../Data/balanced/nonEmergency/'
-    train_path_em = '../Cleaned data/Train_balanced/Emergency/'
-    train_path_nonem = '../Cleaned_data/Train_balanced/nonEmergency/'
+    train_path_em = '../Data/balanced/cleaned_emergency/'
+    train_path_nonem = '../Data/balanced/nonEmergency/'
+    # train_path_em = '../Cleaned data/Train_balanced/Emergency/'
+    # train_path_nonem = '../Cleaned_data/Train_balanced/nonEmergency/'
 
     print("Training data")
     Em_data, Nonem_data = get_data(train_path_em, train_path_nonem)
@@ -277,10 +276,10 @@ def main():
     X_train, Y_train, scaler = prepare_data_train(Em_data, Nonem_data)
 
     # # test data
-    # test_path_em = '../Data/new_eval/cleaned_emergency/'
-    # test_path_nonem = '../Data/eval/nonEmergency/'
-    test_path_em = '../Cleaned data/Eval_balanced/Emergency/'
-    test_path_nonem = '../Cleaned data/Eval_balanced/nonEmergency/'
+    test_path_em = '../Data/new_eval/cleaned_emergency/'
+    test_path_nonem = '../Data/eval/nonEmergency/'
+    # test_path_em = '../Cleaned data/Eval_balanced/Emergency/'
+    # test_path_nonem = '../Cleaned data/Eval_balanced/nonEmergency/'
 
     print("Test data")
     Em_data, Nonem_data = get_data(test_path_em, test_path_nonem)
